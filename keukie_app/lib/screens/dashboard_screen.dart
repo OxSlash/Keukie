@@ -359,7 +359,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 sections: [
                   PieChartSectionData(
                     value: tunaiPercent == 0 ? 1 : tunaiPercent,
-                    color: secondaryColor,
+                    color: accentColor,
                     title: '${tunaiPercent.toStringAsFixed(0)}%',
                     radius: 50,
                     titleStyle: const TextStyle(
@@ -370,7 +370,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   PieChartSectionData(
                     value: digitalPercent == 0 ? 1 : digitalPercent,
-                    color: accentColor,
+                    color: secondaryColor,
                     title: '${digitalPercent.toStringAsFixed(0)}%',
                     radius: 50,
                     titleStyle: const TextStyle(
@@ -387,7 +387,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildLegendItem(secondaryColor, 'Tunai'),
+              _buildLegendItem(accentColor, 'Tunai'),
               const SizedBox(height: 8),
               _buildLegendItem(secondaryColor, 'Digital'),
             ],
