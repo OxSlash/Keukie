@@ -13,7 +13,7 @@ class ProfilController extends Controller
         $user = $request->user();
         $request->validate([
             'name' => 'required|string|max:225',
-            'email' => 'required|string|email|unique:users,email' . $user->id,
+            'email' => 'required|string|email|unique:users,email,' . $user->id,
         ]);
 
         $emailBerubah = $request->email !== $user->email;
