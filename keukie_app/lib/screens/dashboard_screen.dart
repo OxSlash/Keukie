@@ -4,6 +4,7 @@ import '../services/dashboard_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'login_screen.dart';
 import 'setting_profil_modal.dart';
+import 'transaksi_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -106,6 +107,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
           IconButton(
             icon: const Icon(Icons.refresh, color: accentColor),
             onPressed: _loadDashboard,
+          ),
+          IconButton(
+            icon: const Icon(Icons.receipt_long, color: accentColor),
+            tooltip: 'Transaksi',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const TransaksiScreen(),
+                ),
+              );
+            },
           ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.account_circle, color: accentColor),
