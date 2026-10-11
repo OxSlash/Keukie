@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/transaksi_service.dart';
@@ -13,6 +14,8 @@ class TransaksiScreen extends StatefulWidget {
 class _TransaksiScreenState extends State<TransaksiScreen> {
   final TransaksiService _service = TransaksiService();
   final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
+  int _requestId = 0;
 
   List<dynamic> _transaksi = [];
   bool _loading = true;
@@ -30,6 +33,7 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
   static const accentDark = Color(0xFF00b388);
   static const textPrimary = Color(0xFFffffff);
   static const textSecondary = Color(0xFFaaaaaa);
+  static const double maxContentWidth = 900;
 
   final _currency = NumberFormat.currency(
     locale: 'id_ID',
@@ -47,15 +51,20 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadTransaksi() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+  Future<void> _loadTransaksi({bool silent = false}) async {
+    final requestId = ++_requestId;
+
+    if (!silent) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
 
     final result = await _service.getTransaksi(
       jenis: _filterJenis,
@@ -67,9 +76,12 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
       cari: _searchController.text.trim(),
     );
 
+    if (!mounted || requestId != _requestId) return;
+
     setState(() {
       _loading = false;
       if (result['statusCode'] == 200) {
+        _error = null;
         _transaksi = result['data'];
       } else {
         _error = result['message'] ?? 'Gagal memuat transaksi';
@@ -77,12 +89,33 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
     });
   }
 
+  void _onSearchChanged(String _) {
+    _debounce?.cancel();
+    setState(() {});
+    _debounce = Timer(const Duration(milliseconds: 400), () {
+      _loadTransaksi(silent: true);
+    });
+  }
+
   Future<void> _pickDate({required bool isDari}) async {
+    final today = DateUtils.dateOnly(DateTime.now());
+    final firstDate = isDari ? DateTime(2020) : (_filterDari ?? DateTime(2020));
+    final lastDate = isDari ? (_filterSampai ?? today) : today;
+    final current = isDari ? _filterDari : _filterSampai;
+
+    var initialDate = DateUtils.dateOnly(DateTime.now());
+    if (initialDate.isAfter(lastDate)) initialDate = lastDate;
+    if (initialDate.isBefore(firstDate)) initialDate = firstDate;
+
     final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
+      firstDate: firstDate,
+      lastDate: lastDate,
+      initialDate: initialDate,
+      helpText: isDari ? 'Dari tanggal' : 'Sampai tanggal',
+      cancelText: 'Batal',
+      errorFormatText: 'Format tanggal tidak valid',
+      errorInvalidText: 'Tanggak diluar rentang (maksimal hari ini)',
       builder: (context, child) => Theme(
         data: ThemeData.dark().copyWith(
           colorScheme: const ColorScheme.dark(
@@ -93,20 +126,10 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
         child: child!,
       ),
     );
-
-    if (picked != null) {
-      setState(() {
-        if (isDari) {
-          _filterDari = picked;
-        } else {
-          _filterSampai = picked;
-        }
-      });
-      _loadTransaksi();
-    }
   }
 
   void _clearFilters() {
+    _debounce?.cancel();
     setState(() {
       _filterJenis = null;
       _filterMetode = null;
@@ -196,103 +219,229 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
     );
   }
 
+  bool get _hasActiveFilter =>
+      _filterJenis != null ||
+      _filterMetode != null ||
+      _filterDari != null ||
+      _filterSampai != null ||
+      _searchController.text.isNotEmpty;
+
   Widget _buildSearchAndFilters() {
     return Container(
+      width: double.infinity,
       color: surfaceColor,
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        children: [
-          TextField(
-            controller: _searchController,
-            style: const TextStyle(color: textPrimary),
-            onSubmitted: (_) => _loadTransaksi(),
-            decoration: InputDecoration(
-              hintText: 'Cari catatan transaksi...',
-              hintStyle: const TextStyle(color: textSecondary),
-              filled: true,
-              fillColor: bgColor,
-              prefixIcon: const Icon(Icons.search, color: textSecondary),
-              suffixIcon: IconButton(
-                icon: const Icon(Icons.search, color: accentColor),
-                onPressed: _loadTransaksi,
-              ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 0),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide.none,
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: maxContentWidth),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _filterChip('Semua Jenis', _filterJenis == null, () {
-                  setState(() => _filterJenis = null);
-                  _loadTransaksi();
-                }),
-                _filterChip('Pemasukan', _filterJenis == 'pemasukan', () {
-                  setState(() => _filterJenis = 'pemasukan');
-                  _loadTransaksi();
-                }),
-                _filterChip('Pengeluaran', _filterJenis == 'pengeluaran', () {
-                  setState(() => _filterJenis = 'pengeluaran');
-                  _loadTransaksi();
-                }),
-                const SizedBox(width: 8),
-                _filterChip('Semua Metode', _filterMetode == null, () {
-                  setState(() => _filterMetode = null);
-                  _loadTransaksi();
-                }),
-                _filterChip('Tunai', _filterMetode == 'tunai', () {
-                  setState(() => _filterMetode = 'tunai');
-                  _loadTransaksi();
-                }),
-                _filterChip('Digital', _filterMetode == 'digital', () {
-                  setState(() => _filterMetode = 'digital');
-                  _loadTransaksi();
-                }),
-                const SizedBox(width: 8),
-                ActionChip(
-                  backgroundColor: surfaceLight,
-                  label: Text(
-                    _filterDari == null
-                        ? 'Dari Tanggal'
-                        : _dateFormat.format(_filterDari!),
-                    style: const TextStyle(color: textSecondary, fontSize: 12),
-                  ),
-                  onPressed: () => _pickDate(isDari: true),
-                ),
-                const SizedBox(width: 6),
-                ActionChip(
-                  backgroundColor: surfaceLight,
-                  label: Text(
-                    _filterSampai == null
-                        ? 'Sampai Tanggal'
-                        : _dateFormat.format(_filterSampai!),
-                    style: const TextStyle(color: textSecondary, fontSize: 12),
-                  ),
-                  onPressed: () => _pickDate(isDari: false),
-                ),
-                const SizedBox(width: 6),
-                if (_filterJenis != null ||
-                    _filterMetode != null ||
-                    _filterDari != null ||
-                    _filterSampai != null ||
-                    _searchController.text.isNotEmpty)
-                  ActionChip(
-                    backgroundColor: Colors.redAccent.withOpacity(0.15),
-                    label: const Text(
-                      'Reset',
-                      style: TextStyle(color: Colors.redAccent, fontSize: 12),
+                TextField(
+                  controller: _searchController,
+                  style: const TextStyle(color: textPrimary),
+                  onChanged: _onSearchChanged,
+                  decoration: InputDecoration(
+                    hintText: 'Cari catatan transaksi...',
+                    hintStyle: const TextStyle(color: textSecondary),
+                    filled: true,
+                    fillColor: bgColor,
+                    isDense: true,
+                    prefixIcon: const Icon(Icons.search, color: textSecondary),
+                    suffixIcon: _searchController.text.isEmpty
+                        ? null
+                        : IconButton(
+                            icon: const Icon(
+                              Icons.close,
+                              color: textSecondary,
+                              size: 18,
+                            ),
+                            onPressed: () {
+                              _searchController.clear();
+                              _onSearchChanged('');
+                            },
+                          ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
                     ),
-                    onPressed: _clearFilters,
                   ),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    _segmentedFilter(
+                      title: 'Jenis',
+                      selected: _filterJenis,
+                      options: const [
+                        ('Semua', null),
+                        ('Pemasukan', 'Pemasukan'),
+                        ('Pengeluaran', 'Pengeluaran'),
+                      ],
+                      onChanged: (value) {
+                        setState(() => _filterMetode = value);
+                        _loadTransaksi();
+                      },
+                    ),
+                    _dateChip(
+                      label: 'Dari tanggal',
+                      value: _filterDari,
+                      onTap: () => _pickDate(isDari: true),
+                      onClear: () {
+                        setState(() => _filterDari = null);
+                        _loadTransaksi();
+                      },
+                    ),
+                    _dateChip(
+                      label: 'Sampai Tanggal',
+                      value: _filterSampai,
+                      onTap: () => _pickDate(isDari: false),
+                      onClear: () {
+                        setState(() => _filterSampai = null);
+                        _loadTransaksi();
+                      },
+                    ),
+                    if (_hasActiveFilter)
+                      TextButton.icon(
+                        onPressed: _clearFilters,
+                        icon: const Icon(
+                          Icons.restart_alt,
+                          color: Colors.redAccent,
+                          size: 16,
+                        ),
+                        label: const Text(
+                          'Reset',
+                          style: TextStyle(
+                            color: Colors.redAccent,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _segmentedFilter({
+    required String title,
+    required String? selected,
+    required List<(String, String?)> options,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: surfaceLight,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: accentDark.withOpacity(0.25)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              title,
+              style: const TextStyle(color: textSecondary, fontSize: 11),
+            ),
+          ),
+          for (final option in options)
+            _segment(
+              option.$1,
+              option.$2 == selected,
+              () => onChanged(option.$2),
+            ),
         ],
+      ),
+    );
+  }
+
+  Widget _segment(String label, bool selected, VoidCallback onTap) {
+    return Material(
+      color: selected ? accentColor : Colors.transparent,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? Colors.black : textSecondary,
+              fontSize: 12,
+              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _dateChip({
+    required String label,
+    required DateTime? value,
+    required VoidCallback onTap,
+    required VoidCallback onClear,
+  }) {
+    final active = value != null;
+    return Material(
+      color: surfaceLight,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: BorderSide(
+          color: active
+              ? accentColor.withOpacity(0.6)
+              : accentDark.withOpacity(0.25),
+        ),
+      ),
+      child: InkWell(
+        customBorder: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 9, 10, 9),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.calendar_today_outlined,
+                size: 14,
+                color: active ? accentColor : textSecondary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                active ? _dateFormat.format(value!) : label,
+                style: TextStyle(
+                  color: active ? textPrimary : textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+              if (active) ...[
+                const SizedBox(width: 6),
+                InkWell(
+                  onTap: onClear,
+                  child: const Icon(
+                    Icons.close,
+                    size: 14,
+                    color: textSecondary,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -315,6 +464,11 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
         onSelected: (_) => onTap(),
       ),
     );
+  }
+
+  double _horizontalPadding(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    return width > maxContentWidth ? (width - maxContentWidth) / 2 + 12 : 12;
   }
 
   Widget _buildList() {
@@ -342,7 +496,11 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
       color: accentColor,
       backgroundColor: surfaceColor,
       child: ListView.builder(
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.symmetric(
+          horizontal: _horizontalPadding(context),
+          vertical: 12,
+        ),
+
         itemCount: _transaksi.length,
         itemBuilder: (context, index) {
           final item = _transaksi[index];
@@ -358,7 +516,6 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
               border: Border.all(color: accentDark.withOpacity(0.2)),
             ),
             child: ListTile(
-              onTap: () => _openForm(transaksi: item),
               leading: CircleAvatar(
                 backgroundColor: isPemasukan
                     ? accentColor.withOpacity(0.15)
@@ -385,13 +542,33 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
               isThreeLine:
                   item['catatan'] != null &&
                   item['catatan'].toString().isNotEmpty,
-              trailing: IconButton(
-                icon: const Icon(
-                  Icons.delete_outline,
-                  color: Colors.redAccent,
-                  size: 20,
-                ),
-                onPressed: () => _confirmDelete(item['id']),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip: 'Edit',
+                    padding: const EdgeInsets.all(8),
+                    constraints: const BoxConstraints(),
+                    icon: const Icon(
+                      Icons.edit_outlined,
+                      color: accentColor,
+                      size: 20,
+                    ),
+                    onPressed: () => _openForm(transaksi: item),
+                  ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    tooltip: 'Hapus',
+                    padding: const EdgeInsets.all(8),
+                    constraints: const BoxConstraints(),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.redAccent,
+                      size: 20,
+                    ),
+                    onPressed: () => _confirmDelete(item['id']),
+                  ),
+                ],
               ),
             ),
           );
