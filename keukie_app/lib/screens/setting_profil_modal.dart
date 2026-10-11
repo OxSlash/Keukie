@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../services/profil_service.dart';
 
@@ -17,6 +18,9 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
   bool _profilLoading = false;
   String? _profilError;
   String? _profilSuccess;
+  String? _currentName;
+  String? _currentEmail;
+
   final _passwordFormKey = GlobalKey<FormState>();
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
@@ -31,6 +35,26 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
   static const accentDark = Color(0xFF00b388);
   static const textPrimary = Color(0xFFffffff);
   static const textSecondary = Color(0xFFaaaaaa);
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfil();
+  }
+
+  Future<void> _loadProfil() async {
+    try {
+      final result = await _profilService.getProfil();
+      if (!mounted || result['statusCode'] != 200) return;
+
+      setState(() {
+        _currentName = result['name']?.toString();
+        _currentEmail = result['email']?.toString();
+        _nameController.text = _currentName ?? '';
+        _emailController.text = _currentEmail ?? '';
+      });
+    } catch (_) {}
+  }
 
   @override
   void dispose() {
@@ -56,10 +80,17 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
       email: _emailController.text.trim(),
     );
 
+    if (!mounted) return;
+
     setState(() {
       _profilLoading = false;
       if (result['statusCode'] == 200) {
         _profilSuccess = result['message'];
+        final user = result['user'];
+        if (user is Map) {
+          _currentName = user['name']?.toString();
+          _currentEmail = user['email']?.toString();
+        }
       } else {
         _profilError = result['message'] ?? 'Gagal memperbarui profil';
       }
@@ -70,9 +101,9 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
     if (!_passwordFormKey.currentState!.validate()) return;
 
     setState(() {
-      _profilLoading = true;
-      _profilError = null;
-      _profilSuccess = null;
+      _passwordLoading = true;
+      _passwordError = null;
+      _passwordSuccess = null;
     });
 
     final result = await _profilService.updatePassword(
@@ -80,6 +111,8 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
       password: _newPasswordController.text,
       passwordConfirmation: _confirmPasswordController.text,
     );
+
+    if (!mounted) return;
 
     setState(() {
       _passwordLoading = false;
@@ -98,30 +131,28 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: Colors.transparent,
+      elevation: 0,
       insetPadding: const EdgeInsets.all(24),
-
-      child: Container(
-        width: 560,
-        height: 420,
-        decoration: BoxDecoration(
-          color: surfaceColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: accentDark.withOpacity(0.3)),
-          boxShadow: [
-            BoxShadow(
-              color: accentColor.withOpacity(0.08),
-              blurRadius: 20,
-              spreadRadius: 1,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+          child: Container(
+            width: 600,
+            height: 460,
+            decoration: BoxDecoration(
+              color: surfaceColor.withOpacity(0.6),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: accentDark.withOpacity(0.35)),
             ),
-          ],
-        ),
-
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildSidebar(),
-            Expanded(child: _buildContent()),
-          ],
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildSidebar(),
+                Expanded(child: _buildContent()),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -129,12 +160,11 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
 
   Widget _buildSidebar() {
     return Container(
-      width: 160,
-      decoration: const BoxDecoration(
-        color: surfaceLight,
-        borderRadius: BorderRadius.horizontal(left: Radius.circular(12)),
+      width: 190,
+      decoration: BoxDecoration(
+        color: surfaceLight.withOpacity(0.5),
+        borderRadius: const BorderRadius.horizontal(left: Radius.circular(14)),
       ),
-
       padding: const EdgeInsets.symmetric(vertical: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -152,7 +182,7 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
           ),
 
           const SizedBox(height: 12),
-          _buildSidebarItem('Prodil', 0, Icons.person_outline),
+          _buildSidebarItem('Profil', 0, Icons.person_outline),
           _buildSidebarItem('Ganti Password', 1, Icons.lock_outline),
           const Spacer(),
           Padding(
@@ -194,12 +224,15 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
               color: isSelected ? accentColor : textSecondary,
             ),
             const SizedBox(width: 10),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? accentColor : textSecondary,
-                fontSize: 13,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            Flexible(
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: isSelected ? accentColor : textSecondary,
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
               ),
             ),
           ],
@@ -231,7 +264,10 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
+            _buildCurrentProfil(),
+            const SizedBox(height: 16),
+
             _buildTextFailed(
               controller: _nameController,
               label: 'Nama',
@@ -270,6 +306,64 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCurrentProfil() {
+    final name = _currentName;
+    final email = _currentEmail;
+    final initial = (name != null && name.isNotEmpty)
+        ? name[0].toUpperCase()
+        : '?';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: bgColor.withOpacity(0.45),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: accentDark.withOpacity(0.25)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: accentColor.withOpacity(0.15),
+            child: Text(
+              initial,
+              style: const TextStyle(
+                color: accentColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name ?? 'Memuat...',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: textPrimary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  email ?? '',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: textSecondary, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -353,7 +447,7 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
         labelText: label,
         labelStyle: const TextStyle(color: textSecondary, fontSize: 12),
         filled: true,
-        fillColor: bgColor,
+        fillColor: bgColor.withOpacity(0.45),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
