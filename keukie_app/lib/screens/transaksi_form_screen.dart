@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/transaksi_service.dart';
+import '../utils/rupiah_input_formatter.dart';
 
 class TransaksiFormScreen extends StatefulWidget {
   final Map<String, dynamic>? transaksi;
@@ -20,7 +21,7 @@ class _TransaksiFormScreenState extends State<TransaksiFormScreen> {
 
   String _jenis = 'pemasukan';
   String _metode = 'tunai';
-  DateTime _tanggal = DateTime.now();
+  DateTime _tanggal = DateUtils.dateOnly((DateTime.now()));
   bool _loading = false;
   String? _error;
 
@@ -44,9 +45,13 @@ class _TransaksiFormScreenState extends State<TransaksiFormScreen> {
       final t = widget.transaksi!;
       _jenis = t['jenis'];
       _metode = t['metode'];
-      _nominalController.text = t['nominal'].toString();
+      _nominalController.text = RupiahInputFormatter.fromNumber(
+        double.tryParse(t['nominal'].toString()) ?? 0,
+      );
       _catatanController.text = t['catatan'] ?? '';
-      _tanggal = DateTime.tryParse(t['tanggal']) ?? DateTime.now();
+      _tanggal = DateUtils.dateOnly(
+        DateTime.tryParse(t['tanggal']) ?? DateTime.now(),
+      );
     }
   }
 
@@ -58,11 +63,16 @@ class _TransaksiFormScreenState extends State<TransaksiFormScreen> {
   }
 
   Future<void> _pickDate() async {
+    final today = DateUtils.dateOnly(DateTime.now());
     final picked = await showDatePicker(
       context: context,
-      initialDate: _tanggal,
+      initialDate: _tanggal.isAfter(today) ? today : _tanggal,
       firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
+      lastDate: today,
+      helpText: 'Pilih Tanggal',
+      cancelText: 'Batal',
+      errorFormatText: 'Format tanggal tidak valid',
+      errorInvalidText: 'Tanggal tidak boleh lewat hari ini',
       builder: (context, child) => Theme(
         data: ThemeData.dark().copyWith(
           colorScheme: const ColorScheme.dark(
@@ -81,13 +91,18 @@ class _TransaksiFormScreenState extends State<TransaksiFormScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_tanggal.isAfter(DateUtils.dateOnly(DateTime.now()))) {
+      setState(() => _error = 'Tanggal tidak boleh lewat hari ini');
+    }
 
     setState(() {
       _loading = true;
       _error = null;
     });
 
-    final nominal = double.parse(_nominalController.text.replaceAll(',', '.'));
+    final nominal = RupiahInputFormatter.parse(
+      _nominalController.text,
+    )!.toDouble();
     final tanggalStr = _apiDateFormat.format(_tanggal);
 
     final result = _isEdit
@@ -107,10 +122,12 @@ class _TransaksiFormScreenState extends State<TransaksiFormScreen> {
             catatan: _catatanController.text.trim(),
           );
 
+    if (!mounted) return;
+
     setState(() => _loading = false);
 
     if (result['statusCode'] == 200 || result['statusCode'] == 201) {
-      if (mounted) Navigator.of(context).pop(true);
+      Navigator.of(context).pop(true);
     } else {
       setState(() => _error = result['message'] ?? 'Gagal menyimpan transaksi');
     }
@@ -128,115 +145,133 @@ class _TransaksiFormScreenState extends State<TransaksiFormScreen> {
         ),
         iconTheme: const IconThemeData(color: textPrimary),
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            const Text(
-              'Jenis',
-              style: TextStyle(color: textSecondary, fontSize: 12),
-            ),
-            const SizedBox(height: 8),
-            Row(
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.all(16),
               children: [
-                Expanded(
-                  child: _jenisButton('pemasukan', 'Pemasukan', accentColor),
+                const Text(
+                  'Jenis',
+                  style: TextStyle(color: textSecondary, fontSize: 12),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _jenisButton(
-                    'pengeluaran',
-                    'Pengeluaran',
-                    Colors.redAccent,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            TextFormField(
-              controller: _nominalController,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              style: const TextStyle(color: textPrimary),
-              decoration: _inputDecoration('Nominal'),
-              validator: (v) {
-                if (v == null || v.isEmpty) return 'Nominal wajib diisi';
-                final parsed = double.tryParse(v.replaceAll(',', '.'));
-                if (parsed == null || parsed <= 0) return 'Nominal tidak valid';
-                return null;
-              },
-            ),
-            const SizedBox(height: 14),
-            const Text(
-              'Metode',
-              style: TextStyle(color: textSecondary, fontSize: 12),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(child: _metodeButton('tunai', 'Tunai')),
-                const SizedBox(width: 10),
-                Expanded(child: _metodeButton('digital', 'Digital')),
-              ],
-            ),
-            const SizedBox(height: 18),
-            InkWell(
-              onTap: _pickDate,
-              child: InputDecorator(
-                decoration: _inputDecoration('Tanggal'),
-                child: Text(
-                  _dateFormat.format(_tanggal),
-                  style: const TextStyle(color: textPrimary),
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            TextFormField(
-              controller: _catatanController,
-              maxLength: 100,
-              maxLines: 2,
-              style: const TextStyle(color: textPrimary),
-              decoration: _inputDecoration('Catatan (opsional)'),
-            ),
-            const SizedBox(height: 10),
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Text(
-                  _error!,
-                  style: const TextStyle(color: Colors.redAccent, fontSize: 12),
-                ),
-              ),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _loading ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: accentColor,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: _loading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.black,
-                        ),
-                      )
-                    : Text(
-                        _isEdit ? 'Simpan Perubahan' : 'Tambah Transaksi',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _jenisButton(
+                        'pemasukan',
+                        'Pemasukan',
+                        accentColor,
                       ),
-              ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _jenisButton(
+                        'pengeluaran',
+                        'Pengeluaran',
+                        Colors.redAccent,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                TextFormField(
+                  controller: _nominalController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [RupiahInputFormatter()],
+                  style: const TextStyle(color: textPrimary),
+                  decoration: _inputDecoration('Nominal').copyWith(
+                    prefixText: 'Rp ',
+                    prefixStyle: const TextStyle(color: textSecondary),
+                  ),
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Nominal wajib diisi';
+                    final parsed = RupiahInputFormatter.parse(v);
+                    if (parsed == null || parsed <= 0)
+                      return 'Nominal tidak valid';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 14),
+                const Text(
+                  'Metode',
+                  style: TextStyle(color: textSecondary, fontSize: 12),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(child: _metodeButton('tunai', 'Tunai')),
+                    const SizedBox(width: 10),
+                    Expanded(child: _metodeButton('digital', 'Digital')),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                InkWell(
+                  onTap: _pickDate,
+                  child: InputDecorator(
+                    decoration: _inputDecoration('Tanggal'),
+                    child: Text(
+                      _dateFormat.format(_tanggal),
+                      style: const TextStyle(color: textPrimary),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                TextFormField(
+                  controller: _catatanController,
+                  maxLength: 100,
+                  minLines: 1,
+                  maxLines: 3,
+                  textAlignVertical: TextAlignVertical.center,
+                  style: const TextStyle(color: textPrimary),
+                  decoration: _inputDecoration('Catatan (opsional)'),
+                ),
+                const SizedBox(height: 10),
+                if (_error != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Text(
+                      _error!,
+                      style: const TextStyle(
+                        color: Colors.redAccent,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _loading ? null : _submit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: accentColor,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: _loading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.black,
+                            ),
+                          )
+                        : Text(
+                            _isEdit ? 'Simpan Perubahan' : 'Tambah Transaksi',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -284,7 +319,7 @@ class _TransaksiFormScreenState extends State<TransaksiFormScreen> {
       labelStyle: const TextStyle(color: textSecondary, fontSize: 12),
       filled: true,
       fillColor: surfaceColor,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
         borderSide: BorderSide(color: accentDark.withOpacity(0.3)),
