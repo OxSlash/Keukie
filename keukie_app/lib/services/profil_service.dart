@@ -9,6 +9,17 @@ class ProfilService {
     return prefs.getString('token');
   }
 
+  Future<Map<String, dynamic>> getProfil() async {
+    final token = await _getToken();
+    final response = await http.get(
+      Uri.parse('${ApiConfig.baseUrl}/user'),
+      headers: {'Accept': 'apllication/json', 'Authrization': 'Bearer $token'},
+    );
+
+    final data = jsonDecode(response.body);
+    return {'statusCode': response.statusCode, ...data};
+  }
+
   Future<Map<String, dynamic>> updateProfil({
     required String name,
     required String email,
