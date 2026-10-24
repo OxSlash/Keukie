@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'google'=>[
+        'client_id'=>env('GOOGLE_CLIENT ID'),
+        'client_secret'=>env('GOOGLE_CLIENT ID'),
+        'redirect'=>env('GOOGLE_REDIRECT_URI'),
+    ],
+
+    'keukie'=>[
+        'deeplink'=>env('APP_DEEPLINK','keukie://auth/callback')
+    ]
 ];
