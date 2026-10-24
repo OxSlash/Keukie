@@ -386,6 +386,15 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
 
             const SizedBox(height: 20),
             _buildTextFailed(
+              controller: _currentPasswordController,
+              label: 'Password Lama',
+              obscure: true,
+              validator: (v) =>
+                  (v == null || v.isEmpty) ? 'Password lama wajib diisi' : null,
+            ),
+
+            const SizedBox(height: 14),
+            _buildTextFailed(
               controller: _newPasswordController,
               label: 'Password Baru',
               obscure: true,
