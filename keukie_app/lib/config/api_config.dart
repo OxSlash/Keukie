@@ -5,7 +5,7 @@ class ApiConfig {
   // email link, mis. 'https://abc.trycloudflare.com'. Kosongkan (null)
   // untuk memakai alamat lokal.
   static const String? publicUrl =
-      'https://theories-phrase-terry-suburban.trycloudflare.com';
+      'https://wagner-electric-answered-leasing.trycloudflare.com';
 
   static String get serverUrl {
     if (publicUrl != null) return publicUrl!;
