@@ -40,39 +40,6 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  Future<void> _loginEmailLink() async {
-    final email = _emailController.text.trim();
-    if (!email.contains('@')) {
-      setState(() => _errorMessage = 'Isi email yang valid dulu');
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = '';
-      _infoMessage = '';
-    });
-
-    try {
-      final result = await _webAuth.requestEmailLink(email);
-      if (!mounted) return;
-      setState(() {
-        if (result['statusCode'] == 200) {
-          _infoMessage =
-              'Link masuk dikirim ke $email. Buka email di perangkat ini, lalu klik linknya.';
-        } else {
-          _errorMessage = result['message'] ?? 'Gagal mengirim link';
-        }
-      });
-    } catch (_) {
-      if (mounted) {
-        setState(() => _errorMessage = 'Tidak dapat terhubung ke server');
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
   Future<void> _login() async {
     setState(() {
       _isLoading = true;
@@ -233,23 +200,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: _isLoading ? null : _loginGoogle,
                   icon: const Icon(Icons.g_mobiledata, size: 30),
                   label: const Text('Masuk dengan Google'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side: const BorderSide(color: Color(0xFF00b388)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: OutlinedButton.icon(
-                  onPressed: _isLoading ? null : _loginEmailLink,
-                  icon: const Icon(Icons.mail_outline),
-                  label: const Text('Masuk dengan Email Link'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
                     side: const BorderSide(color: Color(0xFF00b388)),
