@@ -13,7 +13,7 @@ class ProfilService {
     final token = await _getToken();
     final response = await http.get(
       Uri.parse('${ApiConfig.baseUrl}/user'),
-      headers: {'Accept': 'apllication/json', 'Authrization': 'Bearer $token'},
+      headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
     );
 
     final data = jsonDecode(response.body);
