@@ -38,6 +38,9 @@ dependencies:
   shared_preferences: ^2.5.5
   fl_chart: ^1.2.0
   intl: ^0.20.3
+  url_launcher: ^6.3.3
+  app_links: ^7.2.2
+  crypto: ^3.0.7
 
 dev_dependencies:
   flutter_test:
