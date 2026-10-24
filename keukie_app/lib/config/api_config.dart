@@ -4,7 +4,8 @@ class ApiConfig {
   // Isi dengan alamat tunnel/server https saat menguji login Google dan
   // email link, mis. 'https://abc.trycloudflare.com'. Kosongkan (null)
   // untuk memakai alamat lokal.
-  static const String? publicUrl = null;
+  static const String? publicUrl =
+      'https://theories-phrase-terry-suburban.trycloudflare.com';
 
   static String get serverUrl {
     if (publicUrl != null) return publicUrl!;
