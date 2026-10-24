@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
 import '../services/dashboard_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'login_screen.dart';
@@ -31,6 +32,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   static const Color accentColor = Color(0xFF00FFCC);
   static const Color secondaryColor = Color(0xFF00B388);
   static const Color textSecondary = Color(0xFFAAAAAA);
+  final _dateFormat = DateFormat("dd MMM yyyy");
 
   @override
   void initState() {
@@ -38,17 +40,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _loadDashboard();
   }
 
-  Future<void> _loadDashboard() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+  Future<void> _loadDashboard({bool silent =false}) async {
+    if(!silent){
+      setState(() {
+        _isLoading=true;
+      _errorMessage=null;
+      });
+    }
 
     try {
       final result = await _dashboardService.getDashboard();
+      if(!mounted) return;
 
       if (result['statusCode'] == 200) {
         setState(() {
+          _errorMessage=null;
           _totalSaldo = double.tryParse(result['totalSaldo'].toString()) ?? 0;
           _saldoTunai = double.tryParse(result['saldoTunai'].toString()) ?? 0;
           _saldoDigital =
@@ -67,6 +73,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         });
       }
     } catch (e) {
+      if(!mounted)return;
       setState(() {
         _errorMessage = 'Terjadi Kesalahan';
         _isLoading = false;
@@ -85,9 +92,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Future<void> _openTransaksi()async{
+    await Navigator.of(
+      context
+    ).push(MaterialPageRoute(builder: (context)=>const TransaksiScreen()));
+
+    if(mounted) _loadDashboard(silent: true);
+  }
+
   void _openSettingProfil() {
     showDialog(
       context: context,
+      barrierColor: Colors.black38,
       builder: (context) => const SettingProfilModal(),
     );
   }
@@ -111,17 +127,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
           IconButton(
             icon: const Icon(Icons.receipt_long, color: accentColor),
             tooltip: 'Transaksi',
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const TransaksiScreen(),
-                ),
-              );
-            },
+            onPressed: _openTransaksi,
           ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.account_circle, color: accentColor),
+            tooltip: 'Profil',
             color: cardColor,
+            position: PopupMenuPosition.under,
+            offset: const Offset(0,8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadiusGeometry.circular(12),
+              side: BorderSide(color: secondaryColor.withOpacity(0.3)),
+            ),
             onSelected: (value) {
               if (value == 'setting_profil') {
                 _openSettingProfil();
@@ -132,16 +149,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
             itemBuilder: (context) => [
               const PopupMenuItem(
                 value: 'setting_profil',
-                child: Text(
-                  'Setting Profil',
-                  style: TextStyle(color: Colors.white),
+                child: Row(
+                  children: [
+                    Icon(Icons.settings_outlined,color: Colors.white,size: 18),
+                    SizedBox(width: 10),
+                    Text('Setting Profil',style: TextStyle(color: Colors.white)),
+                  ],
                 ),
               ),
+              const PopupMenuDivider(height: 1),
               const PopupMenuItem(
                 value: 'logout',
-                child: Text(
-                  'Logout',
-                  style: TextStyle(color: Colors.redAccent),
+                child: Row(
+                  children: [
+                    Icon(Icons.logout,color: Colors.redAccent,size: 18),
+                    SizedBox(width: 10),
+                    Text('Logout',style: TextStyle(color: Colors.redAccent)),
+                  ],
                 ),
               ),
             ],
@@ -418,6 +442,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ],
     );
   }
+  
+  String _formatMetodeTanggal(Map<String, dynamic>item){
+    final metode=item['metode']=='tunai'?'Tunai':'Digital';
+    final tanggal=DateTime.tryParse(item['tanggal'].toString());
+    final tanggalText=tanggal !=null
+    ? _dateFormat.format(tanggal)
+    : item['tanggal'].toString();
+    return '$metode -$tanggalText';
+  }
 
   Widget _buildRiwayatList() {
     if (_riwayatTerbaru.isEmpty) {
@@ -456,13 +489,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           (isPemasukan ? 'Pemasukan' : 'Pengeluaran'),
                       style: const TextStyle(color: Colors.white, fontSize: 14),
                     ),
+                    const SizedBox(height: 2,),
                     Text(
-                      '${item['metode']}-${item['tanggal']}',
-                      style: const TextStyle(
-                        color: textSecondary,
-                        fontSize: 11,
-                      ),
-                    ),
+                      _formatMetodeTanggal(item),
+                      style: const TextStyle(color: textSecondary,fontSize: 11),
+                    )
                   ],
                 ),
               ),
