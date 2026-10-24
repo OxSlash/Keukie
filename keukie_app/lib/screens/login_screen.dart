@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'register_screen.dart';
 import 'dashboard_screen.dart';
+import '../services/web_auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,6 +17,61 @@ class _LoginScreenState extends State<LoginScreen> {
   final _authService = AuthService();
   bool _isLoading = false;
   String _errorMessage = '';
+
+  final _webAuth = WebAuthService.instance;
+  String _infoMessage = '';
+
+  Future<void> _loginGoogle() async {
+    setState(() {
+      _errorMessage = '';
+      _infoMessage = '';
+    });
+
+    final error = await _webAuth.startGoogle();
+    if (!mounted) return;
+
+    setState(() {
+      if (error != null) {
+        _errorMessage = error;
+      } else {
+        _infoMessage =
+            'Lanjutkan login Google di browser. Aplikasi akan terbuka otomatis setelah selesai.';
+      }
+    });
+  }
+
+  Future<void> _loginEmailLink() async {
+    final email = _emailController.text.trim();
+    if (!email.contains('@')) {
+      setState(() => _errorMessage = 'Isi email yang valid dulu');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+      _infoMessage = '';
+    });
+
+    try {
+      final result = await _webAuth.requestEmailLink(email);
+      if (!mounted) return;
+      setState(() {
+        if (result['statusCode'] == 200) {
+          _infoMessage =
+              'Link masuk dikirim ke $email. Buka email di perangkat ini, lalu klik linknya.';
+        } else {
+          _errorMessage = result['message'] ?? 'Gagal mengirim link';
+        }
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() => _errorMessage = 'Tidak dapat terhubung ke server');
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   Future<void> _login() async {
     setState(() {
@@ -120,6 +176,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   _errorMessage,
                   style: const TextStyle(color: Colors.redAccent, fontSize: 13),
                 ),
+              if (_infoMessage.isNotEmpty)
+                Text(
+                  _infoMessage,
+                  style: const TextStyle(
+                    color: Color(0xFF00ffcc),
+                    fontSize: 13,
+                  ),
+                ),
 
               const SizedBox(height: 24),
               SizedBox(
@@ -144,6 +208,55 @@ class _LoginScreenState extends State<LoginScreen> {
                             fontSize: 16,
                           ),
                         ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+              const Row(
+                children: [
+                  Expanded(child: Divider(color: Color(0xFF1a1a1a))),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'atau',
+                      style: TextStyle(color: Color(0xFFaaaaaa)),
+                    ),
+                  ),
+                  Expanded(child: Divider(color: Color(0xFF1a1a1a))),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: OutlinedButton.icon(
+                  onPressed: _isLoading ? null : _loginGoogle,
+                  icon: const Icon(Icons.g_mobiledata, size: 30),
+                  label: const Text('Masuk dengan Google'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Color(0xFF00b388)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: OutlinedButton.icon(
+                  onPressed: _isLoading ? null : _loginEmailLink,
+                  icon: const Icon(Icons.mail_outline),
+                  label: const Text('Masuk dengan Email Link'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Color(0xFF00b388)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
               ),
 
