@@ -285,7 +285,7 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                       ],
                       onChanged: (value) {
                         setState(() {
-                          _filterJenis = value?.toLowerCase();
+                          _filterJenis = value;
                         });
                         _loadTransaksi();
                       },
