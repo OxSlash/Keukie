@@ -66,15 +66,20 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
       });
     }
 
-    final result = await _service.getTransaksi(
-      jenis: _filterJenis,
-      metode: _filterMetode,
-      dari: _filterDari != null ? _apiDateFormat.format(_filterDari!) : null,
-      sampai: _filterSampai != null
-          ? _apiDateFormat.format(_filterSampai!)
-          : null,
-      cari: _searchController.text.trim(),
-    );
+    Map<String, dynamic> result;
+    try {
+      result = await _service.getTransaksi(
+        jenis: _filterJenis,
+        metode: _filterMetode,
+        dari: _filterDari != null ? _apiDateFormat.format(_filterDari!) : null,
+        sampai: _filterSampai != null
+            ? _apiDateFormat.format(_filterSampai!)
+            : null,
+        cari: _searchController.text.trim(),
+      );
+    } catch (_) {
+      result = {'statusCode': 0, 'message': 'Tidak dapat terhubung ke server'};
+    }
 
     if (!mounted || requestId != _requestId) return;
 
