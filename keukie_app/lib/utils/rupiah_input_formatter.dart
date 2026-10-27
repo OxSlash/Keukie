@@ -5,14 +5,14 @@ class RupiahInputFormatter extends TextInputFormatter {
 
   static String format(String digits) {
     return digits.replaceAllMapped(
-      RegExp(r'\b(?=(\d{3})+(?!\d))'),
-      (match) => '.',
+      RegExp(r'(\d)(?=(\d{3})+$)'),
+      (match) => '${match[1]}.',
     );
   }
 
   static String fromNumber(num value) => format(value.truncate().toString());
 
-  static int? parse(String text) => int.tryParse(text.replaceAll('.', ' '));
+  static int? parse(String text) => int.tryParse(text.replaceAll('.', ''));
 
   @override
   TextEditingValue formatEditUpdate(
@@ -38,12 +38,16 @@ class RupiahInputFormatter extends TextInputFormatter {
     final cursor = newValue.selection.end < 0
         ? rawText.length
         : newValue.selection.end.clamp(0, rawText.length).toInt();
+
     var remaining = RegExp(r'\d').allMatches(rawText.substring(cursor)).length;
+
     var offset = formatted.length;
+
     while (remaining > 0 && offset > 0) {
       offset--;
       if (formatted[offset] != '.') remaining--;
     }
+
     return TextEditingValue(
       text: formatted,
       selection: TextSelection.collapsed(offset: offset),
