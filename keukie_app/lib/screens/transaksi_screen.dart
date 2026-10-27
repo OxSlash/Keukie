@@ -284,7 +284,9 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                         ('Pengeluaran', 'Pengeluaran'),
                       ],
                       onChanged: (value) {
-                        setState(() => _filterMetode = value);
+                        setState(() {
+                          _filterJenis = value?.toLowerCase();
+                        });
                         _loadTransaksi();
                       },
                     ),
