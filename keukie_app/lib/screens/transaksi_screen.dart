@@ -280,13 +280,11 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                       selected: _filterJenis,
                       options: const [
                         ('Semua', null),
-                        ('Pemasukan', 'Pemasukan'),
-                        ('Pengeluaran', 'Pengeluaran'),
+                        ('Pemasukan', 'pemasukan'),
+                        ('Pengeluaran', 'pengeluaran'),
                       ],
                       onChanged: (value) {
-                        setState(() {
-                          _filterJenis = value;
-                        });
+                        setState(() => _filterJenis = value);
                         _loadTransaksi();
                       },
                     ),
