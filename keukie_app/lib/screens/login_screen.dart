@@ -80,160 +80,183 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF0a0a0a),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 60),
-              const Text(
-                'Keukie',
-                style: TextStyle(
-                  color: Color(0xFF00ffcc),
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Container(
+                padding: const EdgeInsets.all(28),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF111111),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0x6600b388)),
                 ),
-              ),
-
-              const SizedBox(height: 8),
-              const Text(
-                'Masuk ke akunmu',
-                style: TextStyle(color: Color(0xFFaaaaaa), fontSize: 16),
-              ),
-
-              const SizedBox(height: 8),
-              TextField(
-                controller: _emailController,
-                style: const TextStyle(color: Colors.white),
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  labelStyle: const TextStyle(color: Color(0xFFaaaaaa)),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF00ffcc)),
-                  ),
-
-                  filled: true,
-                  fillColor: const Color(0xFF111111),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-              TextField(
-                controller: _passwordController,
-                style: const TextStyle(color: Colors.white),
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  labelStyle: const TextStyle(color: Color(0xFFaaaaaa)),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF1a1a1a)),
-                  ),
-
-                  filled: true,
-                  fillColor: const Color(0xFF111111),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-              if (_errorMessage.isNotEmpty)
-                Text(
-                  _errorMessage,
-                  style: const TextStyle(color: Colors.redAccent, fontSize: 13),
-                ),
-              if (_infoMessage.isNotEmpty)
-                Text(
-                  _infoMessage,
-                  style: const TextStyle(
-                    color: Color(0xFF00ffcc),
-                    fontSize: 13,
-                  ),
-                ),
-
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _login,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00ffcc),
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.black)
-                      : const Text(
-                          'Masuk',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-              const Row(
-                children: [
-                  Expanded(child: Divider(color: Color(0xFF1a1a1a))),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(
-                      'atau',
-                      style: TextStyle(color: Color(0xFFaaaaaa)),
-                    ),
-                  ),
-                  Expanded(child: Divider(color: Color(0xFF1a1a1a))),
-                ],
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: OutlinedButton.icon(
-                  onPressed: _isLoading ? null : _loginGoogle,
-                  icon: const Icon(Icons.g_mobiledata, size: 30),
-                  label: const Text('Masuk dengan Google'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side: const BorderSide(color: Color(0xFF00b388)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Belum punya akun?',
-                    style: TextStyle(color: Color(0xFFaaaaaa)),
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const RegisterScreen()),
-                    ),
-                    child: const Text(
-                      'Daftar',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Keukie',
                       style: TextStyle(
                         color: Color(0xFF00ffcc),
+                        fontSize: 36,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                ],
+
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Masuk ke akunmu',
+                      style: TextStyle(color: Color(0xFFaaaaaa), fontSize: 16),
+                    ),
+
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _emailController,
+                      style: const TextStyle(color: Colors.white),
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        labelStyle: const TextStyle(color: Color(0xFFaaaaaa)),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF00ffcc),
+                          ),
+                        ),
+
+                        filled: true,
+                        fillColor: const Color(0xFF1a1a1a),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _passwordController,
+                      style: const TextStyle(color: Colors.white),
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        labelStyle: const TextStyle(color: Color(0xFFaaaaaa)),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF1a1a1a),
+                          ),
+                        ),
+
+                        filled: true,
+                        fillColor: const Color(0xFF1a1a1a),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+                    if (_errorMessage.isNotEmpty)
+                      Text(
+                        _errorMessage,
+                        style: const TextStyle(
+                          color: Colors.redAccent,
+                          fontSize: 13,
+                        ),
+                      ),
+                    if (_infoMessage.isNotEmpty)
+                      Text(
+                        _infoMessage,
+                        style: const TextStyle(
+                          color: Color(0xFF00ffcc),
+                          fontSize: 13,
+                        ),
+                      ),
+
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _login,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF00ffcc),
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+
+                        child: _isLoading
+                            ? const CircularProgressIndicator(
+                                color: Colors.black,
+                              )
+                            : const Text(
+                                'Masuk',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+                    const Row(
+                      children: [
+                        Expanded(child: Divider(color: Color(0xFF1a1a1a))),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            'atau',
+                            style: TextStyle(color: Color(0xFFaaaaaa)),
+                          ),
+                        ),
+                        Expanded(child: Divider(color: Color(0xFF1a1a1a))),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: OutlinedButton.icon(
+                        onPressed: _isLoading ? null : _loginGoogle,
+                        icon: const Icon(Icons.g_mobiledata, size: 30),
+                        label: const Text('Masuk dengan Google'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: Color(0xFF00b388)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Belum punya akun?',
+                          style: TextStyle(color: Color(0xFFaaaaaa)),
+                        ),
+                        GestureDetector(
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const RegisterScreen(),
+                            ),
+                          ),
+                          child: const Text(
+                            'Daftar',
+                            style: TextStyle(
+                              color: Color(0xFF00ffcc),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
         ),
       ),
