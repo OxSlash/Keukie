@@ -291,16 +291,29 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                   runSpacing: 8,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    _segmentedFilter(
+                    _filterDropdown(
                       title: 'Jenis',
-                      selected: _filterJenis,
+                      icon: Icons.filter_list,
+                      value: _filterJenis,
                       options: const [
-                        ('Semua', null),
                         ('Pemasukan', 'pemasukan'),
                         ('Pengeluaran', 'pengeluaran'),
                       ],
                       onChanged: (value) {
                         setState(() => _filterJenis = value);
+                        _loadTransaksi();
+                      },
+                    ),
+                    _filterDropdown(
+                      title: 'Metode',
+                      icon: Icons.payments_outlined,
+                      value: _filterMetode,
+                      options: const [
+                        ('Tunai', 'tunai'),
+                        ('Digital', 'digital'),
+                      ],
+                      onChanged: (value) {
+                        setState(() => _filterMetode = value);
                         _loadTransaksi();
                       },
                     ),
@@ -343,6 +356,71 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _filterDropdown({
+    required String title,
+    required IconData icon,
+    required String? value,
+    required List<(String, String)> options,
+    required ValueChanged<String?> onChanged,
+  }) {
+    final active = value != null;
+    var label = title;
+    for (final option in options) {
+      if (option.$2 == value) label = option.$1;
+    }
+
+    return PopupMenuButton<String>(
+      tooltip: 'Filter ${title.toLowerCase()}',
+      color: surfaceLight,
+      offset: const Offset(0, 40),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      onSelected: (selected) => onChanged(selected == value ? null : selected),
+      itemBuilder: (context) => [
+        for (final option in options)
+          PopupMenuItem<String>(
+            value: option.$2,
+            child: Text(
+              option.$1,
+              style: TextStyle(
+                color: option.$2 == value ? accentColor : textPrimary,
+              ),
+            ),
+          ),
+      ],
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(10, 9, 6, 9),
+        decoration: BoxDecoration(
+          color: surfaceLight,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: active
+                ? accentColor.withOpacity(0.6)
+                : accentDark.withOpacity(0.25),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: active ? accentColor : textSecondary),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                color: active ? textPrimary : textSecondary,
+                fontSize: 12,
+              ),
+            ),
+            Icon(
+              Icons.arrow_drop_down,
+              size: 18,
+              color: active ? accentColor : textSecondary,
+            ),
+          ],
         ),
       ),
     );
