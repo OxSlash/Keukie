@@ -59,13 +59,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0a0a0a),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 60),
+            body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Container(
+                padding: const EdgeInsets.all(28),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF111111),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0x6600b388)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
               const Text(
                 'Keukie',
                 style: TextStyle(
@@ -99,7 +108,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
 
                   filled: true,
-                  fillColor: const Color(0xFF111111),
+                  fillColor: const Color(0xFF1a1a1a),
                 ),
               ),
 
@@ -122,7 +131,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
 
                   filled: true,
-                  fillColor: const Color(0xFF111111),
+                  fillColor: const Color(0xFF1a1a1a),
                 ),
               ),
 
@@ -145,7 +154,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
 
                   filled: true,
-                  fillColor: const Color(0xFF111111),
+                  fillColor: const Color(0xFF1a1a1a),
                 ),
               ),
 
@@ -168,7 +177,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
 
                   filled: true,
-                  fillColor: const Color(0xFF111111),
+                  fillColor: const Color(0xFF1a1a1a),
                 ),
               ),
 
@@ -234,7 +243,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ],
               ),
-            ],
+                              ],
+                ),
+              ),
+            ),
           ),
         ),
       ),
