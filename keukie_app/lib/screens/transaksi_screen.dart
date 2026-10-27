@@ -103,7 +103,7 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
     final lastDate = isDari ? (_filterSampai ?? today) : today;
     final current = isDari ? _filterDari : _filterSampai;
 
-    var initialDate = DateUtils.dateOnly(DateTime.now());
+    var initialDate = current ?? DateUtils.dateOnly(DateTime.now());
     if (initialDate.isAfter(lastDate)) initialDate = lastDate;
     if (initialDate.isBefore(firstDate)) initialDate = firstDate;
 
@@ -126,6 +126,17 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
         child: child!,
       ),
     );
+
+    if (picked == null) return;
+
+    setState(() {
+      if (isDari) {
+        _filterDari = picked;
+      } else {
+        _filterSampai = picked;
+      }
+    });
+    _loadTransaksi();
   }
 
   void _clearFilters() {
