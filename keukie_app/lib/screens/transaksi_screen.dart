@@ -361,7 +361,7 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
     );
   }
 
-  Widget _filterDropdown({
+    Widget _filterDropdown({
     required String title,
     required IconData icon,
     required String? value,
@@ -374,16 +374,19 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
       if (option.$2 == value) label = option.$1;
     }
 
-    return PopupMenuButton<String>(
-      tooltip: 'Filter ${title.toLowerCase()}',
-      color: surfaceLight,
-      offset: const Offset(0, 40),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      onSelected: (selected) => onChanged(selected == value ? null : selected),
-      itemBuilder: (context) => [
+    return MenuAnchor(
+      alignmentOffset: const Offset(0, 4),
+      style: MenuStyle(
+        backgroundColor: const WidgetStatePropertyAll(surfaceLight),
+        surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      ),
+      menuChildren: [
         for (final option in options)
-          PopupMenuItem<String>(
-            value: option.$2,
+          MenuItemButton(
+            onPressed: () => onChanged(option.$2 == value ? null : option.$2),
             child: Text(
               option.$1,
               style: TextStyle(
@@ -392,37 +395,57 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
             ),
           ),
       ],
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(10, 9, 6, 9),
-        decoration: BoxDecoration(
+      builder: (context, controller, child) {
+        return Material(
           color: surfaceLight,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: active
-                ? accentColor.withOpacity(0.6)
-                : accentDark.withOpacity(0.25),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+            side: BorderSide(
+              color: active
+                  ? accentColor.withOpacity(0.6)
+                  : accentDark.withOpacity(0.25),
+            ),
           ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: active ? accentColor : textSecondary),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                color: active ? textPrimary : textSecondary,
-                fontSize: 12,
+          child: InkWell(
+            customBorder: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            onTap: () {
+              if (controller.isOpen) {
+                controller.close();
+              } else {
+                controller.open();
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 9, 6, 9),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    icon,
+                    size: 14,
+                    color: active ? accentColor : textSecondary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: active ? textPrimary : textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_drop_down,
+                    size: 18,
+                    color: active ? accentColor : textSecondary,
+                  ),
+                ],
               ),
             ),
-            Icon(
-              Icons.arrow_drop_down,
-              size: 18,
-              color: active ? accentColor : textSecondary,
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
