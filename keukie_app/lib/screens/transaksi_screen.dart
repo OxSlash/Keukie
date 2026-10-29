@@ -622,6 +622,7 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
         itemBuilder: (context, index) {
           final item = _transaksi[index];
           final isPemasukan = item['jenis'] == 'pemasukan';
+          final isTunai = item['metode'] == 'tunai';
           final nominal = double.tryParse(item['nominal'].toString()) ?? 0;
           final tanggal = DateTime.tryParse(item['tanggal']) ?? DateTime.now();
 
@@ -638,7 +639,7 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                     ? accentColor.withOpacity(0.15)
                     : Colors.redAccent.withOpacity(0.15),
                 child: Icon(
-                  isPemasukan ? Icons.arrow_downward : Icons.arrow_upward,
+                  isTunai ? Icons.payments_outlined : Icons.smartphone,
                   color: isPemasukan ? accentColor : Colors.redAccent,
                   size: 18,
                 ),
