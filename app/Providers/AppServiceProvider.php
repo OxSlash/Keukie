@@ -5,6 +5,9 @@ namespace App\Providers;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,8 +24,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // VerifyEmail::createUrlUsing(function ($notifiable) {
-        //     return url("/api/email/verify/{$notifiable->getKey()}/" . sha1($notifiable->getEmailForVerification()));
-        // });
+        RateLimiter::for('login', function (Request $request) {
+            $email = strtolower((string)$request->input('email'));
+
+            return [
+                Limit::perMinute(5)->by($email . '|' . $request->ip()),
+                Limit::perMinute(20)->by($request->ip()),
+            ];
+        });
+
+        RateLimiter::for('register', function (Request $request) {
+            return Limit::perHour(10)->by($request->ip());
+        });
     }
 }
