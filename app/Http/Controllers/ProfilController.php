@@ -27,6 +27,9 @@ class ProfilController extends Controller
         $user->save();
 
         if ($emailBerubah) {
+            $user->token()
+                ->where('id', '!=', $user->currentAccessToken()->id)
+                ->delete();
             $user->sendEmailVerificationNotification();
         }
 
@@ -55,6 +58,10 @@ class ProfilController extends Controller
         $user->update([
             'password' => Hash::make($request->password),
         ]);
+
+        $user->tokens()
+            ->where('id', '!=', $user->currentAccessToken()->id)
+            ->delete();
 
         return response()->json([
             'message' => 'Password berhasil diubah',
