@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use PhpParser\Node\NullableType;
 
 class TransaksiController extends Controller
 {
@@ -11,7 +10,7 @@ class TransaksiController extends Controller
     {
         $request->validate([
             'jenis' => 'required|in:pemasukan,pengeluaran',
-            'nominal' => 'required|numeric|min:1',
+            'nominal' => 'required|numeric|min:1|max:9999999999999',
             'metode' => 'required|in:tunai,digital',
             'tanggal' => 'required|date',
             'catatan' => 'nullable|string|max:100',
@@ -33,31 +32,31 @@ class TransaksiController extends Controller
 
     public function index(Request $request)
     {
-        $query=$request->user()->transaksi()->orderBy('tanggal','desc');
+        $query = $request->user()->transaksi()->orderBy('tanggal', 'desc');
 
-        if($request->filled('jenis')){
-            $query->where('jenis',$request->jenis);
+        if ($request->filled('jenis')) {
+            $query->where('jenis', $request->jenis);
         }
 
-        if($request->filled('metode')){
-            $query->where('metode',$request->metode);
+        if ($request->filled('metode')) {
+            $query->where('metode', $request->metode);
         }
 
-        if($request->filled('dari')){
-            $query->where('tanggal','>=',$request->dari);
+        if ($request->filled('dari')) {
+            $query->where('tanggal', '>=', $request->dari);
         }
 
-        if($request->filled('sampai')){
-            $query->where('tanggal','<=',$request->sampai);
+        if ($request->filled('sampai')) {
+            $query->where('tanggal', '<=', $request->sampai);
         }
 
-        if($request->filled('cari')){
-            $query->where('catatan','like','%'.$request->cari.'%');
+        if ($request->filled('cari')) {
+            $query->where('catatan', 'like', '%' . $request->cari . '%');
         }
 
-        $transaksi=$query->get();
+        $transaksi = $query->get();
 
-        return response()->json($transaksi,200);
+        return response()->json($transaksi, 200);
     }
 
     public function show(Request $request, int $id)
@@ -85,7 +84,7 @@ class TransaksiController extends Controller
 
         $request->validate([
             'jenis' => 'sometimes|in:pemasukan,pengeluaran',
-            'nominal' => 'sometimes|numeric|min:1',
+            'nominal' => 'sometimes|numeric|min:1|max:9999999999999',
             'metode' => 'sometimes|in:tunai,digital',
             'tanggal' => 'sometimes|date',
             'catatan' => 'nullable|string|max:100',
