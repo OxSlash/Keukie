@@ -50,13 +50,16 @@ class WebAuthController extends Controller
             ?? User::where('email', $email)->first();
 
         if ($user) {
-            if(!$user->hasVerifiedEmail()){
-                $user->forceFill(['password'=>Str::random(40)])->save();
+            if (!$user->hasVerifiedEmail()) {
+                $user->forceFill([
+                    'password' => Str::random(40),
+                    'password_diatur' => false,
+                ])->save();
                 $user->token()->delete();
             }
 
-            if(!$user->google_id){
-                $user->google_id=$googleUser->getId();
+            if (!$user->google_id) {
+                $user->google_id = $googleUser->getId();
                 $user->save();
             }
         } else {
@@ -65,6 +68,7 @@ class WebAuthController extends Controller
                 'email' => $email,
                 'google_id' => $googleUser->getId(),
                 'password' => Str::random(40),
+                'passwrod_diatur' => false,
             ]);
         }
 
