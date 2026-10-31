@@ -45,11 +45,11 @@ class ProfilController extends Controller
     {
         $user = $request->user();
         $request->validate([
-            'current_password' => 'required|string',
+            'current_password' => $user->password_diatur ? 'required|string' : 'nullable|string',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
-        if (!Hash::check($request->current_password, $user->password)) {
+        if ($user->password_diatur && !Hash::check($request->current_password, $user->password)) {
             return response()->json([
                 'message' => 'Password lama salah',
             ], 401);
@@ -57,6 +57,7 @@ class ProfilController extends Controller
 
         $user->update([
             'password' => Hash::make($request->password),
+            'password_diatur' => true,
         ]);
 
         $user->tokens()
@@ -64,7 +65,7 @@ class ProfilController extends Controller
             ->delete();
 
         return response()->json([
-            'message' => 'Password berhasil diubah',
+            'message' => 'Password berhasil diubah'
         ], 200);
     }
 }
