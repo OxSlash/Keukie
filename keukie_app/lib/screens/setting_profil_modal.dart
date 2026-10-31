@@ -20,6 +20,7 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
   String? _profilSuccess;
   String? _currentName;
   String? _currentEmail;
+  bool _passwordDiatur = true;
 
   final _passwordFormKey = GlobalKey<FormState>();
   final _currentPasswordController = TextEditingController();
@@ -50,6 +51,7 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
       setState(() {
         _currentName = result['name']?.toString();
         _currentEmail = result['email']?.toString();
+        _passwordDiatur = result['password diatur'] != false;
         _nameController.text = _currentName ?? '';
         _emailController.text = _currentEmail ?? '';
       });
@@ -118,6 +120,7 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
       _passwordLoading = false;
       if (result['statusCode'] == 200) {
         _passwordSuccess = result['message'];
+        _passwordDiatur = true;
         _currentPasswordController.clear();
         _newPasswordController.clear();
         _confirmPasswordController.clear();
@@ -375,9 +378,9 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Ganti Password',
-              style: TextStyle(
+            Text(
+              _passwordDiatur ? 'Ganti Password' : 'Buat Password',
+              style: const TextStyle(
                 color: textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -385,6 +388,17 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
             ),
 
             const SizedBox(height: 20),
+            if (_passwordDiatur) ...[
+              _buildTextFailed(
+                controller: _currentPasswordController,
+                label: 'Password Lama',
+                obscure: true,
+                validator: (v) => (v == null || v.isEmpty)
+                    ? 'Password lama wajib diisi'
+                    : null,
+              ),
+              const SizedBox(height: 14),
+            ],
             _buildTextFailed(
               controller: _currentPasswordController,
               label: 'Password Lama',
