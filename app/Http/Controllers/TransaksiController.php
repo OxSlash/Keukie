@@ -32,7 +32,7 @@ class TransaksiController extends Controller
 
     public function index(Request $request)
     {
-        $query = $request->user()->transaksi()->orderBy('tanggal', 'desc');
+        $query = $request->user()->transaksi()->orderBy('tanggal', 'desc')->orderBy('id', 'desc');
 
         if ($request->filled('jenis')) {
             $query->where('jenis', $request->jenis);

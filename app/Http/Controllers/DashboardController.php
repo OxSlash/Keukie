@@ -18,7 +18,7 @@ class DashboardController extends Controller
 
         $totalSaldo = $totalPemasukan - $totalPengeluaran;
 
-        $riwayatTerbaru = $request->user()->transaksi()->orderBy('tanggal', 'desc')->limit(5)->get();
+        $riwayatTerbaru = $request->user()->transaksi()->orderBy('tanggal', 'desc')->orderBy('id', 'desc')->limit(5)->get();
 
         return response()->json([
             'totalSaldo' => $totalSaldo,
