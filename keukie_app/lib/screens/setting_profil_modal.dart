@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../services/profil_service.dart';
 
 class SettingProfilModal extends StatefulWidget {
-  const SettingProfilModal({super.key});
+  const SettingProfilModal({super.key, this.bukaTabPassword = false});
+  final bool bukaTabPassword;
 
   @override
   State<SettingProfilModal> createState() => _SettingProfilModalState();
@@ -40,6 +41,7 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
   @override
   void initState() {
     super.initState();
+    if (widget.bukaTabPassword) _selectedIndex = 1;
     _loadProfil();
   }
 
@@ -388,6 +390,10 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
             ),
 
             const SizedBox(height: 20),
+            if (!_passwordDiatur) ...[
+              _buildNoticeGoogle(),
+              const SizedBox(height: 16),
+            ],
             if (_passwordDiatur) ...[
               _buildTextFailed(
                 controller: _currentPasswordController,
@@ -459,6 +465,35 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildNoticeGoogle() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.orangeAccent.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.orangeAccent.withOpacity(0.5)),
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.warning_amber_rounded,
+            color: Colors.orangeAccent,
+            size: 20,
+          ),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Anda masuk dengan Google. Buat password baru disini untuk keamanan tambahan.',
+              style: TextStyle(color: textPrimary, fontSize: 12),
+            ),
+          ),
+        ],
       ),
     );
   }
