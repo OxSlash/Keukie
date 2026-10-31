@@ -393,6 +393,8 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
                 controller: _currentPasswordController,
                 label: 'Password Lama',
                 obscure: true,
+                TextInputAction: TextInputAction.next,
+                onSubmitted: (_) => FocusScope.of(context).nextFocus(),
                 validator: (v) => (v == null || v.isEmpty)
                     ? 'Password lama wajib diisi'
                     : null,
@@ -412,6 +414,8 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
               controller: _newPasswordController,
               label: 'Password Baru',
               obscure: true,
+              TextInputAction: TextInputAction.next,
+              onSubmitted: (_) => FocusScope.of(context).nextFocus(),
               validator: (v) {
                 if (v == null || v.isEmpty) return 'Wajib diisi';
                 if (v.length < 8) return 'Minimal 8 karakter';
@@ -424,6 +428,10 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
               controller: _confirmPasswordController,
               label: 'Konfirmasi Password Baru',
               obscure: true,
+              TextInputAction: TextInputAction.done,
+              onSubmitted: (_) {
+                if (!_passwordLoading) _submitPassword();
+              },
               validator: (v) {
                 if (v != _newPasswordController.text)
                   return 'Konfirmasi tidak cocok';
@@ -460,11 +468,15 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
     required String label,
     bool obscure = false,
     String? Function(String?)? validator,
+    TextInputAction? TextInputAction,
+    ValueChanged<String>? onSubmitted,
   }) {
     return TextFormField(
       controller: controller,
       obscureText: obscure,
       validator: validator,
+      textInputAction: TextInputAction,
+      onFieldSubmitted: onSubmitted,
       style: const TextStyle(color: textPrimary, fontSize: 13),
       decoration: InputDecoration(
         labelText: label,
