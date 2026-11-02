@@ -22,7 +22,10 @@ class WebAuthController extends Controller
 
         $request->session()->put('auth_challenge', $challenge);
 
-        return Socialite::driver('google')->redirect();
+        /** @var \Laravel\Socialite\Two\GoogleProvider */
+        $driver=Socialite::driver('google');
+        
+        return $driver->with(['prompt'=>'select_account'])->redirect();
     }
 
     public function googleCallback(Request $request)
