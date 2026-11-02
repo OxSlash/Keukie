@@ -27,7 +27,7 @@ class ProfilController extends Controller
         $user->save();
 
         if ($emailBerubah) {
-            $user->token()
+            $user->tokens()
                 ->where('id', '!=', $user->currentAccessToken()->id)
                 ->delete();
             $user->sendEmailVerificationNotification();

@@ -55,7 +55,7 @@ class WebAuthController extends Controller
                     'password' => Str::random(40),
                     'password_diatur' => false,
                 ])->save();
-                $user->token()->delete();
+                $user->tokens()->delete();
             }
 
             if (!$user->google_id) {
@@ -68,7 +68,7 @@ class WebAuthController extends Controller
                 'email' => $email,
                 'google_id' => $googleUser->getId(),
                 'password' => Str::random(40),
-                'passwrod_diatur' => false,
+                'password_diatur' => false,
             ]);
         }
 
