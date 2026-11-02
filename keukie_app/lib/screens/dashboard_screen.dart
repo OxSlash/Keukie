@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../services/dashboard_service.dart';
+import '../services/profil_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'login_screen.dart';
 import 'setting_profil_modal.dart';
@@ -16,8 +17,10 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   final DashboardService _dashboardService = DashboardService();
+  final ProfilService _profilService = ProfilService();
 
   bool _isLoading = true;
+  bool _perluBuatPassword = false;
   String? _errorMessage;
 
   double _totalSaldo = 0;
@@ -38,23 +41,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _loadDashboard();
+    _cekStatusPassword();
   }
 
-  Future<void> _loadDashboard({bool silent =false}) async {
-    if(!silent){
+  Future<void> _loadDashboard({bool silent = false}) async {
+    if (!silent) {
       setState(() {
-        _isLoading=true;
-      _errorMessage=null;
+        _isLoading = true;
+        _errorMessage = null;
       });
     }
 
     try {
       final result = await _dashboardService.getDashboard();
-      if(!mounted) return;
+      if (!mounted) return;
 
       if (result['statusCode'] == 200) {
         setState(() {
-          _errorMessage=null;
+          _errorMessage = null;
           _totalSaldo = double.tryParse(result['totalSaldo'].toString()) ?? 0;
           _saldoTunai = double.tryParse(result['saldoTunai'].toString()) ?? 0;
           _saldoDigital =
@@ -73,12 +77,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
         });
       }
     } catch (e) {
-      if(!mounted)return;
+      if (!mounted) return;
       setState(() {
         _errorMessage = 'Terjadi Kesalahan';
         _isLoading = false;
       });
     }
+  }
+
+  Future<void> _cekStatusPassword() async {
+    try {
+      final result = await _profilService.getProfil();
+      if (!mounted || result['statusCode'] != 200) return;
+
+      setState(() {
+        _perluBuatPassword = result['password_diatur'] == false;
+      });
+    } catch (_) {}
   }
 
   Future<void> _logout() async {
@@ -92,20 +107,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Future<void> _openTransaksi()async{
+  Future<void> _openTransaksi() async {
     await Navigator.of(
-      context
-    ).push(MaterialPageRoute(builder: (context)=>const TransaksiScreen()));
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const TransaksiScreen()));
 
-    if(mounted) _loadDashboard(silent: true);
+    if (mounted) _loadDashboard(silent: true);
   }
 
-  void _openSettingProfil() {
-    showDialog(
+  Future<void> _openSettingProfil({bool keTabPassword = false}) async {
+    await showDialog(
       context: context,
       barrierColor: Colors.black38,
-      builder: (context) => const SettingProfilModal(),
+      builder: (context) => SettingProfilModal(bukaTabPassword: keTabPassword),
     );
+
+    if (mounted) _cekStatusPassword();
   }
 
   String _formatRupiah(double value) {
@@ -130,30 +147,64 @@ class _DashboardScreenState extends State<DashboardScreen> {
             onPressed: _openTransaksi,
           ),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.account_circle, color: accentColor),
+            icon: Badge(
+              isLabelVisible: _perluBuatPassword,
+              smallSize: 9,
+              backgroundColor: Colors.redAccent,
+              child: const Icon(Icons.account_circle, color: accentColor),
+            ),
             tooltip: 'Profil',
             color: cardColor,
             position: PopupMenuPosition.under,
-            offset: const Offset(0,8),
+            offset: const Offset(0, 8),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadiusGeometry.circular(12),
               side: BorderSide(color: secondaryColor.withOpacity(0.3)),
             ),
             onSelected: (value) {
-              if (value == 'setting_profil') {
+              if (value == 'buat_password') {
+                _openSettingProfil(keTabPassword: true);
+              } else if (value == 'setting_profil') {
                 _openSettingProfil();
               } else if (value == 'logout') {
                 _logout();
               }
             },
             itemBuilder: (context) => [
+              if (_perluBuatPassword) ...[
+                const PopupMenuItem(
+                  value: 'buat_password',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.redAccent,
+                        size: 18,
+                      ),
+                      SizedBox(width: 10),
+                      Text(
+                        'Buat Password',
+                        style: TextStyle(color: Colors.redAccent),
+                      ),
+                    ],
+                  ),
+                ),
+                const PopupMenuDivider(height: 1),
+              ],
               const PopupMenuItem(
                 value: 'setting_profil',
                 child: Row(
                   children: [
-                    Icon(Icons.settings_outlined,color: Colors.white,size: 18),
+                    Icon(
+                      Icons.settings_outlined,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                     SizedBox(width: 10),
-                    Text('Setting Profil',style: TextStyle(color: Colors.white)),
+                    Text(
+                      'Setting Profil',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ],
                 ),
               ),
@@ -162,9 +213,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 value: 'logout',
                 child: Row(
                   children: [
-                    Icon(Icons.logout,color: Colors.redAccent,size: 18),
+                    Icon(Icons.logout, color: Colors.redAccent, size: 18),
                     SizedBox(width: 10),
-                    Text('Logout',style: TextStyle(color: Colors.redAccent)),
+                    Text('Logout', style: TextStyle(color: Colors.redAccent)),
                   ],
                 ),
               ),
@@ -442,13 +493,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ],
     );
   }
-  
-  String _formatMetodeTanggal(Map<String, dynamic>item){
-    final metode=item['metode']=='tunai'?'Tunai':'Digital';
-    final tanggal=DateTime.tryParse(item['tanggal'].toString());
-    final tanggalText=tanggal !=null
-    ? _dateFormat.format(tanggal)
-    : item['tanggal'].toString();
+
+  String _formatMetodeTanggal(Map<String, dynamic> item) {
+    final metode = item['metode'] == 'tunai' ? 'Tunai' : 'Digital';
+    final tanggal = DateTime.tryParse(item['tanggal'].toString());
+    final tanggalText = tanggal != null
+        ? _dateFormat.format(tanggal)
+        : item['tanggal'].toString();
     return '$metode -$tanggalText';
   }
 
@@ -489,11 +540,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           (isPemasukan ? 'Pemasukan' : 'Pengeluaran'),
                       style: const TextStyle(color: Colors.white, fontSize: 14),
                     ),
-                    const SizedBox(height: 2,),
+                    const SizedBox(height: 2),
                     Text(
                       _formatMetodeTanggal(item),
-                      style: const TextStyle(color: textSecondary,fontSize: 11),
-                    )
+                      style: const TextStyle(
+                        color: textSecondary,
+                        fontSize: 11,
+                      ),
+                    ),
                   ],
                 ),
               ),
