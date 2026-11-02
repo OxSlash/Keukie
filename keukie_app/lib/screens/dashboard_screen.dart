@@ -115,11 +115,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (mounted) _loadDashboard(silent: true);
   }
 
-  Future<void> _openSettingProfil({bool keTabPassword = false}) async {
+  Future<void> _openSettingProfil() async {
     await showDialog(
       context: context,
       barrierColor: Colors.black38,
-      builder: (context) => SettingProfilModal(bukaTabPassword: keTabPassword),
+      builder: (context) => const SettingProfilModal(),
     );
 
     if (mounted) _cekStatusPassword();
@@ -150,7 +150,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: Badge(
               isLabelVisible: _perluBuatPassword,
               smallSize: 9,
-              backgroundColor: Colors.redAccent,
+              backgroundColor: Colors.amber,
               child: const Icon(Icons.account_circle, color: accentColor),
             ),
             tooltip: 'Profil',
@@ -162,49 +162,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
               side: BorderSide(color: secondaryColor.withOpacity(0.3)),
             ),
             onSelected: (value) {
-              if (value == 'buat_password') {
-                _openSettingProfil(keTabPassword: true);
-              } else if (value == 'setting_profil') {
+              if (value == 'setting_profil') {
                 _openSettingProfil();
               } else if (value == 'logout') {
                 _logout();
               }
             },
             itemBuilder: (context) => [
-              if (_perluBuatPassword) ...[
-                const PopupMenuItem(
-                  value: 'buat_password',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.warning_amber_rounded,
-                        color: Colors.redAccent,
-                        size: 18,
-                      ),
-                      SizedBox(width: 10),
-                      Text(
-                        'Buat Password',
-                        style: TextStyle(color: Colors.redAccent),
-                      ),
-                    ],
-                  ),
-                ),
-                const PopupMenuDivider(height: 1),
-              ],
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'setting_profil',
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.settings_outlined,
                       color: Colors.white,
                       size: 18,
                     ),
-                    SizedBox(width: 10),
-                    Text(
+                    const SizedBox(width: 10),
+                    const Text(
                       'Setting Profil',
                       style: TextStyle(color: Colors.white),
                     ),
+                    if (_perluBuatPassword) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Colors.amber,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

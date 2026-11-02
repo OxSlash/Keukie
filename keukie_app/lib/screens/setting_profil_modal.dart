@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/profil_service.dart';
 
 class SettingProfilModal extends StatefulWidget {
-  const SettingProfilModal({super.key, this.bukaTabPassword = false});
-  final bool bukaTabPassword;
+  const SettingProfilModal({super.key});
 
   @override
   State<SettingProfilModal> createState() => _SettingProfilModalState();
@@ -41,7 +40,6 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
   @override
   void initState() {
     super.initState();
-    if (widget.bukaTabPassword) _selectedIndex = 1;
     _loadProfil();
   }
 
@@ -53,7 +51,7 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
       setState(() {
         _currentName = result['name']?.toString();
         _currentEmail = result['email']?.toString();
-        _passwordDiatur = result['password diatur'] != false;
+        _passwordDiatur = result['password_diatur'] != false;
         _nameController.text = _currentName ?? '';
         _emailController.text = _currentEmail ?? '';
       });
@@ -188,7 +186,12 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
 
           const SizedBox(height: 12),
           _buildSidebarItem('Profil', 0, Icons.person_outline),
-          _buildSidebarItem('Ganti Password', 1, Icons.lock_outline),
+          _buildSidebarItem(
+            'Ganti Password',
+            1,
+            Icons.lock_outline,
+            showDot: !_passwordDiatur,
+          ),
           const Spacer(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -206,7 +209,12 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
     );
   }
 
-  Widget _buildSidebarItem(String label, int index, IconData icon) {
+  Widget _buildSidebarItem(
+    String label,
+    int index,
+    IconData icon, {
+    bool showDot = false,
+  }) {
     final isSelected = _selectedIndex == index;
     return InkWell(
       onTap: () => setState(() => _selectedIndex = index),
@@ -240,6 +248,17 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
                 ),
               ),
             ),
+            if (showDot) ...[
+              const SizedBox(width: 8),
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Colors.amber,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -407,15 +426,6 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
               ),
               const SizedBox(height: 14),
             ],
-            _buildTextFailed(
-              controller: _currentPasswordController,
-              label: 'Password Lama',
-              obscure: true,
-              validator: (v) =>
-                  (v == null || v.isEmpty) ? 'Password lama wajib diisi' : null,
-            ),
-
-            const SizedBox(height: 14),
             _buildTextFailed(
               controller: _newPasswordController,
               label: 'Password Baru',
