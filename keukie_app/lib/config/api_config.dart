@@ -2,7 +2,7 @@ import 'dart:io';
 
 class ApiConfig {
   static const String? publicUrl = 
-  'https://carefully-thesaurus-wax-soil.trycloudflare.com';
+  'https://assignment-generations-delete-difficulties.trycloudflare.com';
 
   static String get serverUrl {
     if (publicUrl != null) return publicUrl!;
