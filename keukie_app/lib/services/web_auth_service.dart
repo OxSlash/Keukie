@@ -80,21 +80,6 @@ class WebAuthService {
     return ok ? null : 'Tidak bisa membuka browser';
   }
 
-  Future<Map<String, dynamic>> requestEmailLink(String email) async {
-    final challenge = await _newChallenge();
-    final response = await http.post(
-      Uri.parse('${ApiConfig.baseUrl}/auth/email-link'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: jsonEncode({'email': email, 'challenge': challenge}),
-    );
-
-    final data = jsonDecode(response.body);
-    return {'statusCode': response.statusCode, ...data};
-  }
-
   Future<void> _onUri(Uri uri) async {
     if (uri.scheme != scheme || uri.host != 'auth') return;
 
