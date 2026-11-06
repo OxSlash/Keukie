@@ -449,62 +449,6 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
     );
   }
 
-  Widget _segmentedFilter({
-    required String title,
-    required String? selected,
-    required List<(String, String?)> options,
-    required ValueChanged<String?> onChanged,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: surfaceLight,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: accentDark.withOpacity(0.25)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(
-              title,
-              style: const TextStyle(color: textSecondary, fontSize: 11),
-            ),
-          ),
-          for (final option in options)
-            _segment(
-              option.$1,
-              option.$2 == selected,
-              () => onChanged(option.$2),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _segment(String label, bool selected, VoidCallback onTap) {
-    return Material(
-      color: selected ? accentColor : Colors.transparent,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: selected ? Colors.black : textSecondary,
-              fontSize: 12,
-              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _dateChip({
     required String label,
     required DateTime? value,
