@@ -11,6 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::dropIfExists('login_tokens');
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
         Schema::create('login_tokens',function (Blueprint $table){
             $table->id();
             $table->string('email')->index();
@@ -20,13 +28,5 @@ return new class extends Migration
             $table->timestamp('used_at')->nullable();
             $table->timestamps();
         });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        //
     }
 };
