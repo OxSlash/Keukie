@@ -418,7 +418,7 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
                 controller: _currentPasswordController,
                 label: 'Password Lama',
                 obscure: true,
-                TextInputAction: TextInputAction.next,
+                textInputAction: TextInputAction.next,
                 onSubmitted: (_) => FocusScope.of(context).nextFocus(),
                 validator: (v) => (v == null || v.isEmpty)
                     ? 'Password lama wajib diisi'
@@ -430,7 +430,7 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
               controller: _newPasswordController,
               label: 'Password Baru',
               obscure: true,
-              TextInputAction: TextInputAction.next,
+              textInputAction: TextInputAction.next,
               onSubmitted: (_) => FocusScope.of(context).nextFocus(),
               validator: (v) {
                 if (v == null || v.isEmpty) return 'Wajib diisi';
@@ -444,7 +444,7 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
               controller: _confirmPasswordController,
               label: 'Konfirmasi Password Baru',
               obscure: true,
-              TextInputAction: TextInputAction.done,
+              textInputAction: TextInputAction.done,
               onSubmitted: (_) {
                 if (!_passwordLoading) _submitPassword();
               },
@@ -513,14 +513,14 @@ class _SettingProfilModalState extends State<SettingProfilModal> {
     required String label,
     bool obscure = false,
     String? Function(String?)? validator,
-    TextInputAction? TextInputAction,
+    TextInputAction? textInputAction,
     ValueChanged<String>? onSubmitted,
   }) {
     return TextFormField(
       controller: controller,
       obscureText: obscure,
       validator: validator,
-      textInputAction: TextInputAction,
+      textInputAction: textInputAction,
       onFieldSubmitted: onSubmitted,
       style: const TextStyle(color: textPrimary, fontSize: 13),
       decoration: InputDecoration(
