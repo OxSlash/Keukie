@@ -1,9 +1,7 @@
 import 'dart:io';
 
 class ApiConfig {
-  static const String _publicUrl = String.fromEnvironment(
-    'https://new-accessed-fill-manner.trycloudflare.com',
-  );
+  static const String _publicUrl = String.fromEnvironment('PUBLIC_URL');
 
   static String get serverUrl {
     if (_publicUrl.isNotEmpty) return _publicUrl;
