@@ -41,6 +41,7 @@ dependencies:
   url_launcher: ^6.3.3
   app_links: ^7.2.2
   crypto: ^3.0.7
+  flutter_secure_storage: ^11.2.0
 
 dev_dependencies:
   flutter_test:
